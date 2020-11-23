@@ -851,7 +851,7 @@ when creating text index we can have additional infomation with it like language
 with weight we specify which fields should have higher score in the text query
 
 ```javascript
-db.product.createIndex({title: "text", desciption: "text"}, {default_language: "english", weights: {title: 1, description: 10}})
+db.product.createIndex({title: "text", description: "text"}, {default_language: "english", weights: {title: 1, description: 10}})
 ```
 
 ### exclude a test in text index search
