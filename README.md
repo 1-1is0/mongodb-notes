@@ -822,7 +822,7 @@ db.coll.createIndex({"description": "text"})
 db.coll.createIndex({"title": "text", "description": "text"})
 ```
 
-it text index all the stem words (a, an, the) removed and it's not case sensitive.
+in text index all the stem words (a, an, the) removed and it's not case sensitive.
 there could be only one text index per collection, text index are heavy in size
 and we can't create more that one for a collection.
 
@@ -845,4 +845,19 @@ db.products.find({$text: {$search: "some text"}}, {score: {$meta: "textScore"}})
 db.products.find({$text: {$search: "some text"}}, {score: {$meta: "textScore"}}).sort(
   {score: {$meta: "textScore"}}
 )
+```
+
+when creating text index we can have additional infomation with it like language and weights of each field.
+with weight we specify which fields should have higher score in the text query
+
+```javascript
+db.product.createIndex({title: "text", desciption: "text"}, {default_language: "english", weights: {title: 1, description: 10}})
+```
+
+### exclude a test in text index search
+
+For excluding certain text from a text search we can search the word with a `-` as prefix.
+
+```javascript
+db.coll.find({$text: {$search: "searchthis -notsearchthis"}})
 ```
