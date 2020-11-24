@@ -869,7 +869,38 @@ we can not query the collection until the index creation is over.
 but we can create index in the background so normal query can proceed while index is
 being created.
 
-
 ```javascript
 db.coll.createIndex({field: 1}, {background: true})
+```
+
+## GeoJson Data
+
+This is a special kind of json for storing geo spatial data so then at later
+we can query the db with special geo methods.  
+
+the important thins here is syntax of document we are going to add to db.
+`{type: <Geo type>, coordinates: [<list>, <of>, <cords>]}` is the syntax.
+
+```javascript
+> db.places.insertOne(
+  {
+    name: "California Academy of Sciences",
+    location: {type: "Point", coordinates: [-122.4724356, 37.7672544]}
+  })
+{
+        "acknowledged" : true,
+        "insertedId" : ObjectId("5fbcd4d4cea8b103e0fb0ea2")
+}
+> db.places.findOne()
+{
+        "_id" : ObjectId("5fbcd4d4cea8b103e0fb0ea2"),
+        "name" : "California Academy of Sciences",
+        "location" : {
+                "type" : "Point",
+                "coordinates" : [
+                        -122.4724356,
+                        37.7672544
+                ]
+        }
+}
 ```
