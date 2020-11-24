@@ -861,3 +861,15 @@ For excluding certain text from a text search we can search the word with a `-` 
 ```javascript
 db.coll.find({$text: {$search: "searchthis -notsearchthis"}})
 ```
+
+### Create index in the background
+
+in normal creation of an index it will be created in the foreground. therefore
+we can not query the collection until the index creation is over.
+but we can create index in the background so normal query can proceed while index is
+being created.
+
+
+```javascript
+db.coll.createIndex({field: 1}, {background: true})
+```
