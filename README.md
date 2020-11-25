@@ -97,10 +97,6 @@ Now we are at it we can `pull` or `pop` element from the an array.
 For *pulling* we can do this and pull all the element with the specified title.
 `db.users.updateOne({name: "username"}, {$pull: {hobbies: {title: "something"}}})`
 
-
-
-
-
 ```javascript
 {
 "_id" : ObjectId("5f585a682be6d96ed523fe82"),
@@ -131,8 +127,6 @@ and have an array in the object.
 ]
 }
 ```
-
-
 
 ## Schemas
 
@@ -189,7 +183,7 @@ when user order something it's a good idea to use embedded doc instead of refere
 
 ## Schema validation
 
-Schema validation can check the incoming data to see if it match the discribed schemas or not.
+Schema validation can check the incoming data to see if it match the described schemas or not.
 ![schema validation](schema_validation.png)
 we can define a validator for posts collection like this
 
@@ -884,8 +878,8 @@ the important thins here is syntax of document we are going to add to db.
 ```javascript
 > db.places.insertOne(
   {
-    name: "California Academy of Sciences",
-    location: {type: "Point", coordinates: [-122.4724356, 37.7672544]}
+    name: "",
+    location: {type: "Point", coordinates: [<long>, <lat>]}
   })
 {
         "acknowledged" : true,
@@ -894,13 +888,40 @@ the important thins here is syntax of document we are going to add to db.
 > db.places.findOne()
 {
         "_id" : ObjectId("5fbcd4d4cea8b103e0fb0ea2"),
-        "name" : "California Academy of Sciences",
+        "name" : "",
         "location" : {
                 "type" : "Point",
                 "coordinates" : [
-                        -122.4724356,
-                        37.7672544
+                        <long>,
+                        <lat>
                 ]
         }
 }
 ```
+
+## Querying geo spatial location
+
+for querying quo spatial location we first need to create an index
+for that location of `2dsphere` type.
+
+```javascript
+db.places.createIndex({location: "2dsphere"})
+```
+
+now we can query on location field, for that in addition to the query location
+we must specify a max and min distance.
+
+```javascript
+db.places.find({location: {$near: {$geometry:
+  {type: "Point", coordinates: [<long>, <lat>]}, $maxDistance: 500, $minDistance: 10
+  }}})
+```
+
+for query inside a polygon and check if certain locations are inside a polygon there is `$geowithin` operator.
+
+```javascript
+db.places.find({location: {$geoWithin: {$geometry:
+  {type: "Polygon", coordinates: [<Point>, ..., <Point>]}}}})
+```
+
+and this query can find us anything inside that polygon
