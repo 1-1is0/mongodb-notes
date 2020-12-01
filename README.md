@@ -918,6 +918,7 @@ db.places.find({location: {$near: {$geometry:
 ```
 
 for query inside a polygon and check if certain locations are inside a polygon there is `$geowithin` operator.
+for polygon type in first and last point must be the same ex: `[p1, p2, p3, p4, p5, p1]`
 
 ```javascript
 db.places.find({location: {$geoWithin: {$geometry:
@@ -925,3 +926,25 @@ db.places.find({location: {$geoWithin: {$geometry:
 ```
 
 and this query can find us anything inside that polygon
+
+## Searching for a point inside a polygon
+
+adding a polygon to database is the same as adding a point but with different type. after insering the area
+we must create that special index for our area
+
+```javascript
+db.areas.insertOne({name: "some place", area: {type: "Polygon", coordinates: [[p1, p2, p3, p4, p1]]}})
+db.areas.createIndex({ares: "2dshpere"})
+```
+
+now we can query each point we like to see if it's index the which polygon
+
+```javascript
+db.areas.find({area: {$geoIntersects: {$geometry: {type: "Point", coordinates: [<long>, <lat>]}}}})
+```
+
+# Aggregation
+
+a pip line of data manipulation.
+
+![Aggregation](aggregation.png)
