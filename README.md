@@ -951,7 +951,9 @@ query index in the aggregation can take advantage of mongodb indexes.
 
 ![Aggregation](aggregation.png)
 
-the first step in aggregation is query step and it wirrten insede the `$match`
+the first step in aggregation is query step and it written inside the `$match`,
+query inside the `$match` same as find query and it return the result to the next step
+in the pipeline.
 
 ```javascript
 db.persons.aggregate([
@@ -959,14 +961,78 @@ db.persons.aggregate([
 ])
 ```
 
-the second part is `$group`. with this operator we can group data by any field in the document and
-and performe operation on them.
+with this match query we filter document to return every one with `{gender: "female"}`.  
 
+the second part is `$group`. with this operator we can group data by any field in the document and
+and perform operation on them. it groped them by the fields in the `_id` and apply the next operation
+to the document in the each group.
 
 ```javascript
 db.persons.aggregate([
     { $match: { gender: "female"} },
     { $group: { _id: { state: "$location.state" }, totalPersons: { $sum: 1} } }
 ])
+
+{ "_id" : { "state" : "malatya" }, "totalPersons" : 1 }
+{ "_id" : { "state" : "uusimaa" }, "totalPersons" : 12 }
+{ "_id" : { "state" : "mardin" }, "totalPersons" : 3 }
+{ "_id" : { "state" : "schwyz" }, "totalPersons" : 11 }
 ```
 
+adding to the pervious pipeline, we create a group that only shows number of persons in each state.
+as you can see the data from `$group` stage is not sorted we can add another stage to sort on this data.  
+
+with `$sort` we can do this part and sort data outputted by the previous step. in aggregation
+pipeline data pass to the next level generated from the last step.
+
+```javascript
+db.persons.aggregate([
+    { $match: { gender: 'female' } },
+    { $sort: { totalPersons: -1 } }
+    { $group: { _id: { state: "$location.state" }, totalPersons: { $sum: 1 } } },
+]).pretty();
+
+{ "_id" : { "state" : "midtjylland" }, "totalPersons" : 33 }
+{ "_id" : { "state" : "nordjylland" }, "totalPersons" : 27 }
+{ "_id" : { "state" : "syddanmark" }, "totalPersons" : 24 }
+{ "_id" : { "state" : "new south wales" }, "totalPersons" : 24 }
+```
+
+for just passing a subset of document to the next step we can use `$project` operator.
+in the `$project` operator we can also create fields with operator like `$toUpper` and ...
+
+
+
+```javascript
+db.persons.aggregate([
+    {
+      $project: {
+        _id: 0,
+        gender: 1,
+        fullName: {
+          $concat: [
+            { $toUpper: { $substrCP: ['$name.first', 0, 1] } },
+            {
+              $substrCP: [
+                '$name.first',
+                1,
+                { $subtract: [{ $strLenCP: '$name.first' }, 1] }
+              ]
+            },
+            ' ',
+            { $toUpper: '$name.last' },
+          ]
+        }
+      }
+    }
+  ]).pretty();
+
+{ "gender" : "male", "fullName" : "Carl JACOBS" }
+{ "gender" : "male", "fullName" : "Isolino VIANA" }
+{ "gender" : "female", "fullName" : "Katie WELCH" }
+{ "gender" : "male", "fullName" : "Zachary LO" }
+```
+
+this project exclude `_id` and create and additional field named `fullName`.
+`fullName` is `$name.first` with first character in uppercase plus all `$name.last`
+uppercase.
