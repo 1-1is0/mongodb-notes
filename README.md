@@ -943,8 +943,30 @@ now we can query each point we like to see if it's index the which polygon
 db.areas.find({area: {$geoIntersects: {$geometry: {type: "Point", coordinates: [<long>, <lat>]}}}})
 ```
 
-# Aggregation
+## Aggregation
 
 a pip line of data manipulation.
+all the step of aggregation runs on monogdb server and there is no fetching data.
+query index in the aggregation can take advantage of mongodb indexes.
 
 ![Aggregation](aggregation.png)
+
+the first step in aggregation is query step and it wirrten insede the `$match`
+
+```javascript
+db.persons.aggregate([
+    { $match: { gender: "female"} }
+])
+```
+
+the second part is `$group`. with this operator we can group data by any field in the document and
+and performe operation on them.
+
+
+```javascript
+db.persons.aggregate([
+    { $match: { gender: "female"} },
+    { $group: { _id: { state: "$location.state" }, totalPersons: { $sum: 1} } }
+])
+```
+
