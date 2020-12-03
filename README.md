@@ -1001,8 +1001,6 @@ db.persons.aggregate([
 for just passing a subset of document to the next step we can use `$project` operator.
 in the `$project` operator we can also create fields with operator like `$toUpper` and ...
 
-
-
 ```javascript
 db.persons.aggregate([
     {
@@ -1036,3 +1034,107 @@ db.persons.aggregate([
 this project exclude `_id` and create and additional field named `fullName`.
 `fullName` is `$name.first` with first character in uppercase plus all `$name.last`
 uppercase.
+
+It is okay to have multiple project step in a pipeline. as an example:
+for transferring value there is `$convert` operator and we can specify the behavior of
+conversion in and *error* or *null* case. for simpler conversion we can simply write
+`{ $toDate: '$dob.date' }`, this is a simple operator that only convert to date.
+
+```javascript
+db.persons.aggregate([
+    {
+      $project: {
+        _id: 0,
+        name: 1,
+        email: 1,
+        birthdate: { $convert: { input: '$dob.date', to: 'date' } },
+        age: "$dob.age",
+        location: {
+          type: 'Point',
+          coordinates: [
+            {
+              $convert: {
+                input: '$location.coordinates.longitude',
+                to: 'double',
+                onError: 0.0,
+                onNull: 0.0
+              }
+            },
+            {
+              $convert: {
+                input: '$location.coordinates.latitude',
+                to: 'double',
+                onError: 0.0,
+                onNull: 0.0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      $project: {
+        gender: 1,
+        email: 1,
+        location: 1,
+        birthdate: 1,
+        age: 1,
+        fullName: {
+          $concat: [
+            { $toUpper: { $substrCP: ['$name.first', 0, 1] } },
+            {
+              $substrCP: [
+                '$name.first',
+                1,
+                { $subtract: [{ $strLenCP: '$name.first' }, 1] }
+              ]
+            },
+            ' ',
+            { $toUpper: { $substrCP: ['$name.last', 0, 1] } },
+            {
+              $substrCP: [
+                '$name.last',
+                1,
+                { $subtract: [{ $strLenCP: '$name.last' }, 1] }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]).pretty();
+
+
+{
+        location : {
+                type : Point,
+                coordinates : [
+                        14.0142,
+                        18.2563
+                ]
+        },
+        email : signe.rasmussen@example.com,
+        birthdate : ISODate(1983-05-20T21:26:44Z),
+        age : 35,
+        fullName : Signe Rasmussen
+}
+{
+        location : {
+                type : Point,
+                coordinates : [
+                        -104.3451,
+                        -88.4983
+                ]
+        },
+        email : aya.liland@example.com,
+        birthdate : ISODate(1973-08-26T00:11:58Z),
+        age : 45,
+        fullName : Aya Liland
+}
+
+```
+
+this is a two step projection. on the first stage we filter some field and creating new fields.
+it's okay to create new field in `$project` pipeline. we created the `location` fields which is a document
+in it there is a `type: "Point"` and it's a constant. the `coordinate` field is an array of long and lat.
+long and lat are strings in the original document but `$convert` convert them to *double*.
