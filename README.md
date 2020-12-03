@@ -998,6 +998,8 @@ db.persons.aggregate([
 { "_id" : { "state" : "new south wales" }, "totalPersons" : 24 }
 ```
 
+### Aggregation prject
+
 for just passing a subset of document to the next step we can use `$project` operator.
 in the `$project` operator we can also create fields with operator like `$toUpper` and ...
 
@@ -1136,5 +1138,84 @@ db.persons.aggregate([
 
 this is a two step projection. on the first stage we filter some field and creating new fields.
 it's okay to create new field in `$project` pipeline. we created the `location` fields which is a document
-in it there is a `type: "Point"` and it's a constant. the `coordinate` field is an array of long and lat.
-long and lat are strings in the original document but `$convert` convert them to *double*.
+in it there is a `type: "Point"` and it's a constant. the `coordinate` field is an array of *long* and *lat*.
+*long* and *lat* are strings in the original document but `$convert` convert them to *double*.
+
+### Aggregation `$group`
+
+`$group` can merge many document into one document based on the group condition.
+
+grouping with array fields.
+
+```javascript
+db.friends.aggregate([
+    { $unwind: "$hobbies" },
+    { $group: { _id: { age: "$age" }, allHobbies: { $push: "$hobbies" } } }
+  ]).pretty();
+
+{
+        _id : {
+                age : 29
+        },
+        allHobbies : [
+                Sports,
+                Cooking,
+                Cooking,
+                Skiing
+        ]
+}
+{
+        _id : {
+                age : 30
+        },
+        allHobbies : [
+                Eating,
+                Data Analytics
+        ]
+}
+```
+
+the above aggregation take groups document by age (every document with the same age in a group).
+all the document have an array of hobbies (ex: `"hobbies": ["Sports", "Cooking"],`), the `$push` operator
+push all the element from the `hobbies` array in each document to `allHobbies` in the grouped document.
+here because all the *hobbies* are in an array *pushing* them to another fields will result in an nested array.
+
+```javascript
+allHobbies : [
+        [
+                Sports,
+                Cooking
+        ],
+        [
+                Cooking,
+                Skiing
+        ]
+]
+```
+
+the `$push` operator only push any document from the original to the destination. whether it's an array, document,
+number or thing else. to solve this we can use `$unwind` operator before *grouping*.  
+
+*unwind* extract every element in an array and spit out new document with that element as a new fields.
+
+for a document with hobbies array with  `"hobbies": ["Cooking", "Skiing"],` *unwind* outputs new document
+for each array element.
+
+```javascript
+db.friends.aggregate([
+    { $unwind: "$hobbies" }
+  ]).pretty();
+
+{
+        _id : ObjectId(5fc896803402ea4431d67dfe),
+        name : Maria,
+        hobbies : Cooking,
+        age : 29,
+}
+{
+        _id : ObjectId(5fc896803402ea4431d67dfe),
+        name : Maria,
+        hobbies : Skiing,
+        age : 29,
+}
+```
