@@ -1178,7 +1178,9 @@ db.friends.aggregate([
 the above aggregation take groups document by age (every document with the same age in a group).
 all the document have an array of hobbies (ex: `"hobbies": ["Sports", "Cooking"],`), the `$push` operator
 push all the element from the `hobbies` array in each document to `allHobbies` in the grouped document.
-here because all the *hobbies* are in an array *pushing* them to another fields will result in an nested array.
+here because all the *hobbies* are in an array *pushing* them to another fields will result in an nested array.  
+
+if we used `$addToSet` instead of `$push` we could avoid having duplicate value in `allHobbies`.
 
 ```javascript
 allHobbies : [
