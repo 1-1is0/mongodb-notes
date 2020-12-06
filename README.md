@@ -1221,3 +1221,67 @@ db.friends.aggregate([
         age : 29,
 }
 ```
+
+`$slice` is a *projection* operator that can be used to slice an array and take any element from it.
+with `$slice` we pass an array document and the array index we want to select, it could be a *positive number*
+for selecting from start, *a negative number* for counting backward and *two numbers* for a string point and number of
+element after that. or if you are interested in the array document size replace the `$slice` with `$size`.
+
+```javascript
+db.friends.aggregate([
+    { $project: { _id: 0, examScore: { $slice: ["$examScores", 2, 1] } } }
+  ]).pretty();
+```
+
+what if we want to filter on array element and compare the array element? well there is a `$filter`
+operation for that. with *filter* first we specify an `input` from the source document, this is the array we
+want to filter on, `as` will be name of the temporary variable for each array element. `cond` is the condition of
+the filter. to access the temporary variable from `as` we must you `$$` and everything else work the same.
+
+```javascript
+db.friends.aggregate([
+    {
+      $project: {
+        _id: 0,
+        scores: { $filter: { input: '$examScores', as: 'sc', cond: { $gt: ["$$sc.score", 60] } } }
+      }
+    }
+  ]).pretty();
+```
+
+it this example we have `examScores` array, we store elements in `sc` and then compare them in `cond` to get all
+the exam with score greater than 60.  
+
+if we want to do more complicated grouping like grouping on array. we can use `$bucket` or `$bucketAuto`.
+with `$bucket` we should specify all the boundaries that each element. but with `$buckerAuto`
+we specify the number of buckets and mongo will create that many number of buckets.
+
+```javascript
+db.persons
+  .aggregate([
+    {
+      $bucket: {
+        groupBy: '$dob.age',
+        boundaries: [18, 30, 40, 50, 60, 120],
+        output: {
+          numPersons: { $sum: 1 },
+          averageAge: { $avg: '$dob.age' }
+        }
+      }
+    }
+  ])
+  .pretty();
+
+db.persons.aggregate([
+    {
+      $bucketAuto: {
+        groupBy: '$dob.age',
+        buckets: 5,
+        output: {
+          numPersons: { $sum: 1 },
+          averageAge: { $avg: '$dob.age' }
+        }
+      }
+    }
+  ]).pretty();
+```
