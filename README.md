@@ -1285,3 +1285,45 @@ db.persons.aggregate([
     }
   ]).pretty();
 ```
+
+there is also the ability to store an aggregation pipeline into a collection
+with a `$out` stage we can specify a collection to write the data into that stage.
+
+```javascript
+db.persons.aggregate([
+  {
+    ...
+  },
+  { 
+    $out: "transformedPersons"
+  }
+  ]).pretty();
+```
+
+## Numeric Data
+
+there is four type for storing numerical data in MongoDB
+
+1. Integer (*int32*)
+2. Long (*int64*)
+3. Doubles (*64bit*), double store floating point but suffer the common problem of
+   representing decimal float in binary for higher accuracy we can use *High Precision Doubles*.
+4. High Precision Doubles (*128bit*)
+
+
+Inserting different number type to MongoDB.  
+MongoDB default type for storing number is Double, but the way number get handled and passed to the
+MongoDB depends on the driver we are using.  
+
+Int is good enough and has a wide range to support many use cases. for adding int to the in mongo shell
+we can do `db.col.insertOne({NumberInt(123)})`  
+
+For integer bigger than 32bit we should use Long. `db.col.insertOne({NumberLong("12347182957232")})`.
+wrap the number inside "<num>" because javascript can't handle long numbers.  
+
+As we mentioned before Doubles are not precise and can not doing calculation on them might
+result surprising answers. in this case *NumberDecimal* is the answer.
+for adding new value as *NumberDecimal* we can do `db.col.insertOnt({NumberDecimal("0.2")})`.  
+
+Notice that if we store a number as anythings other than default number type, we must do all other calculation and
+updates on them with the same type. in the case if `$inc` ex: `db.col.updateOne({}, {$set: {NumberDecimal("0.6")}})`
