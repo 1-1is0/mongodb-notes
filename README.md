@@ -1327,3 +1327,15 @@ for adding new value as *NumberDecimal* we can do `db.col.insertOnt({NumberDecim
 
 Notice that if we store a number as anythings other than default number type, we must do all other calculation and
 updates on them with the same type. in the case if `$inc` ex: `db.col.updateOne({}, {$set: {NumberDecimal("0.6")}})`
+
+## Security
+
+### Authentication and Authorization
+
+user can authenticate in different ways, we are using a password based auth
+each user is authenticated against a database, and created on that database. each user has a role
+and roles specify the user privilege like which database user can access and run read or write.
+
+for creating a user first switch to the database and `db.createUser({user: "user", pwd: "password", roles: ["role"]})`  
+if we want to change user roles or update the user we could run
+`db.updateUser("user", {roles: ["readWrite", {role: "readWrite", db: "blog"}]})`.
