@@ -1339,3 +1339,27 @@ and roles specify the user privilege like which database user can access and run
 for creating a user first switch to the database and `db.createUser({user: "user", pwd: "password", roles: ["role"]})`  
 if we want to change user roles or update the user we could run
 `db.updateUser("user", {roles: ["readWrite", {role: "readWrite", db: "blog"}]})`.
+
+## Capped collection
+
+for use cases like caching, keeping logs where the application has a hight throughput we can
+store data in a *Capped Collection* if old data is not important.
+*Capped Collection* stores data in with some limit and if the collection reached the limit
+it will delete the old document, for example we can create a *Capped Collection* with maximum
+of five document and when we add the sixth document to the collection one document get deleted
+and the new document is added to the collection.
+
+```javascript
+db.capped_test.insertOne("capped", {capped: true,  size: 1000, max: 5})
+```
+
+## MongoDB ReplicaSet and Sharding
+
+with this setup data written into the *Primary Node* will be inserted to *Replica Nodes* asynchronously.
+this *Secondary Nodes* have a copy of whole data and can act is the *Primary Node* (for ex: when it's offline).
+or we can improve read request speed by running then on the *Secondary Nodes*.  
+
+with *sharding* mongo distribute the data across different shared. it don't replicate the data
+and each shard contains part of data. with *shard key* field on document mongo can decide where the data
+should be stored and query on. with *shard key* mongo only ask a shard with that *shard key* to run the query.
+but if our query missed a *shard key* then mongo have to run the query on all shards.
