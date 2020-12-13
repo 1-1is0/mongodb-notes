@@ -1363,3 +1363,27 @@ with *sharding* mongo distribute the data across different shared. it don't repl
 and each shard contains part of data. with *shard key* field on document mongo can decide where the data
 should be stored and query on. with *shard key* mongo only ask a shard with that *shard key* to run the query.
 but if our query missed a *shard key* then mongo have to run the query on all shards.
+
+
+# Transations
+transaction takes a set of query and run them, the key different is if one of the query in a transaction fails, every changes to the database
+will be rollded back, like notting happens to db.  
+
+For wrapping queries to a transaction we have to create a session.
+
+```javascript
+> const session = db.getMongo().startSession()
+> const blogsColl = session.getDatabase("blog").blog
+> const usersColl = session.getDatabase("blog").user
+> session.startTransaction()
+> usersColl.deleteOne({_id: ObjectId("5fd5ab12509771719f7cf384")})
+{ "acknowledged" : true, "deletedCount" : 1 }
+> blogsColl.deleteMany({userId: ObjectId("5fd5ab12509771719f7cf384")})
+{ "acknowledged" : true, "deletedCount" : 2 }
+> session.commitTransaction()
+```
+
+with this transaction we delete a user and all the post related to that user in one transaction.
+
+
+
